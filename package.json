@@ -23,7 +23,8 @@
     "autoprefixer": "^10.4.20",
     "tailwindcss-animate": "^1.0.7",
     "@radix-ui/react-compose-refs": "^1.1.0",
-    "@radix-ui/react-slot": "^1.1.0"
+    "@radix-ui/react-slot": "^1.1.0",
+    "next-themes": "^0.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -37,9 +38,5 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.35.0",
     "@next/eslint-plugin-next": "^15.4.2"
-  },
-  "resolutions": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
   }
 }
