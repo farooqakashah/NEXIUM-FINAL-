@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 let cachedClient: MongoClient | null = null;
 
@@ -58,27 +58,23 @@ export async function POST(request: Request) {
 
     let tailoredResume: string;
 
-    // Handle various n8n response formats
     if (response.status === 200) {
-     if (response.data.content) {
-  tailoredResume = response.data.content;
-} else if (response.data.tailoredResume) {
-  tailoredResume = response.data.tailoredResume;
-} else if (Array.isArray(response.data) && response.data[0]?.tailoredResume) {
-  tailoredResume = response.data[0].tailoredResume;
-} else if (Array.isArray(response.data) && response.data[0]?.content) {
-  tailoredResume = response.data[0].content;
-} else if (response.data.result) {
-  tailoredResume = response.data.result;
-} else if (response.data.resume) {
-  tailoredResume = response.data.resume;
-} else if (response.data.output) {
-  tailoredResume = response.data.output;
-} else {
-  console.error('Invalid n8n response format:', response.data);
-  tailoredResume = `Fallback tailored resume for: ${resumeInput.substring(0, 100)}...`;
-}
-
+      if (response.data.content) {
+        tailoredResume = response.data.content;
+      } else if (response.data.tailoredResume) {
+        tailoredResume = response.data.tailoredResume;
+      } else if (Array.isArray(response.data) && response.data[0]?.tailoredResume) {
+        tailoredResume = response.data[0].tailoredResume;
+      } else if (response.data.result) {
+        tailoredResume = response.data.result;
+      } else if (response.data.resume) {
+        tailoredResume = response.data.resume;
+      } else if (response.data.output) {
+        tailoredResume = response.data.output;
+      } else {
+        console.error('Invalid n8n response format:', response.data);
+        tailoredResume = `Fallback tailored resume for: ${resumeInput.substring(0, 100)}...`;
+      }
     } else {
       console.error('n8n response error:', { status: response.status, data: response.data });
       throw new Error(`n8n returned invalid status: ${response.status}`);
@@ -101,15 +97,16 @@ export async function POST(request: Request) {
 
     console.log('Resume stored for userId:', userId, 'with _id:', result.insertedId, 'tailoredResume length:', tailoredResume.length);
     return NextResponse.json({ tailoredResume });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as AxiosError | Error;
     console.error('Error in tailor-resume:', {
-      message: error.message,
-      stack: error.stack,
-      response: error.response ? { status: error.response.status, data: error.response.data } : null,
+      message: err.message,
+      stack: err.stack,
+      response: err instanceof AxiosError ? { status: err.response?.status, data: err.response?.data } : null,
     });
     return NextResponse.json(
-      { error: `Failed to tailor resume: ${error.message}` },
-      { status: error.response?.status || 500 }
+      { error: `Failed to tailor resume: ${err.message}` },
+      { status: err instanceof AxiosError ? err.response?.status || 500 : 500 }
     );
   }
 }
