@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 
-
 interface Resume {
   _id: string;
   userId: string;
@@ -76,7 +75,10 @@ export default function Dashboard() {
         <meta name="description" content="View your latest tailored resume" />
       </Head>
 
-      <div className="min-h-screen flex flex-col items-center p-6">
+      <div
+        className="min-h-screen flex flex-col items-center p-6 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('https://static.vecteezy.com/system/resources/previews/026/481/532/large_2x/serenity-and-peace-with-this-breathtaking-4k-wallpaper-depicting-a-tranquil-natural-landscape-free-photo.jpg')" }}
+      >
         <div className="w-full max-w-3xl bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Your Latest Resume</h1>
 
@@ -95,7 +97,9 @@ export default function Dashboard() {
                 Resume from {new Date(latestResume.createdAt).toLocaleDateString()}
               </h2>
               <div className="mb-4">
-                <h3 className="text-lg font-medium text-gray-700">Original Resume ({latestResume.resumeInput?.length || 0} characters)</h3>
+                <h3 className="text-lg font-medium text-gray-700">
+                  Original Resume ({latestResume.resumeInput?.length || 0} characters)
+                </h3>
                 <pre className="mt-2 p-4 bg-gray-50 rounded-lg text-gray-600 text-sm whitespace-pre-wrap overflow-auto max-h-96">
                   {latestResume.resumeInput || 'Not available'}
                 </pre>
@@ -105,7 +109,15 @@ export default function Dashboard() {
                 <pre className="mt-2 p-4 bg-gray-50 rounded-lg text-gray-600 text-sm whitespace-pre-wrap">
                   {latestResume.jobDescription ? (
                     isJobDescriptionExpanded ? (
-                      latestResume.jobDescription
+                      <>
+                        {latestResume.jobDescription}
+                        <button
+                          onClick={toggleJobDescription}
+                          className="text-blue-600 hover:underline ml-2 font-medium"
+                        >
+                          Show Less
+                        </button>
+                      </>
                     ) : (
                       <>
                         {latestResume.jobDescription.substring(0, 100)}...
@@ -113,7 +125,7 @@ export default function Dashboard() {
                           onClick={toggleJobDescription}
                           className="text-blue-600 hover:underline ml-2 font-medium"
                         >
-                          {isJobDescriptionExpanded ? 'Show Less' : 'Show More'}
+                          Show More
                         </button>
                       </>
                     )
@@ -123,7 +135,9 @@ export default function Dashboard() {
                 </pre>
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-700">Tailored Resume ({latestResume.tailoredResume?.length || 0} characters)</h3>
+                <h3 className="text-lg font-medium text-gray-700">
+                  Tailored Resume ({latestResume.tailoredResume?.length || 0} characters)
+                </h3>
                 <pre className="mt-2 p-4 bg-gray-50 rounded-lg text-gray-600 text-sm whitespace-pre-wrap overflow-auto max-h-96">
                   {latestResume.tailoredResume || 'Not available'}
                 </pre>
