@@ -1,24 +1,20 @@
+```typescript
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
 
+const uri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
 
 async function connectToMongo() {
   if (cachedClient) {
-    return cachedClient;
+    try {
+      await cachedClient.db().command({ ping: 1 });
+      return cachedClient;
+    } catch {
+      cachedClient = null;
+    }
   }
-
-  const mongoUri = process.env.MONGODB_URI;
-  if (!mongoUri) {
-    console.error('MONGODB_URI is not defined');
-    throw new Error('MONGODB_URI is not defined');
-  }
-
-  const client = new MongoClient(mongoUri, {
-    maxPoolSize: 10,
-    connectTimeoutMS: 10000,
-  });
-
+  const client = new MongoClient(uri);
   await client.connect();
   cachedClient = client;
   return client;
@@ -30,30 +26,17 @@ export async function GET(request: Request) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      console.error('Missing userId in query parameters');
-      return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 });
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
     const client = await connectToMongo();
     const db = client.db('resume_tailor');
-    const collection = db.collection('resumes');
+    const resumes = await db.collection('resumes').find({ userId }).sort({ createdAt: -1 }).toArray();
 
-    const resumes = await collection
-      .find({ userId })
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    console.log(`Fetched ${resumes.length} resumes for userId: ${userId}`);
-    return NextResponse.json(resumes);
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Error in get-resumes:', {
-      message: err.message,
-      stack: err.stack,
-    });
-    return NextResponse.json(
-      { error: `Failed to fetch resumes: ${err.message}` },
-      { status: 500 }
-    );
+    return NextResponse.json(resumes, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching resumes:', error);
+    return NextResponse.json({ error: 'Failed to fetch resumes' }, { status: 500 });
   }
 }
+```
