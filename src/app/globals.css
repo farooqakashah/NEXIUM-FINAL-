@@ -73,9 +73,17 @@
   }
 
   * {
-    @apply border outline-ring/50;
+    @apply border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .outline-ring\/50 {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    outline-color: oklch(0.708 0 0 / 0.5);
   }
 }
