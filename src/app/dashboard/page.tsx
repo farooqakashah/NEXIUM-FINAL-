@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
-import Navbar from '../../components/Navbar';
+
 
 interface Resume {
   _id: string;
