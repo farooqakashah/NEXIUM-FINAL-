@@ -75,12 +75,15 @@
   * {
     @apply border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
 }
 
 @layer utilities {
+  .bg-background {
+    background-color: var(--background);
+  }
+  .text-foreground {
+    color: var(--foreground);
+  }
   .outline-ring\/50 {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
