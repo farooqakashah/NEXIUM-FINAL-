@@ -1,4 +1,4 @@
-```typescript
+
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
 
@@ -39,4 +39,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to fetch resumes' }, { status: 500 });
   }
 }
-```
+
