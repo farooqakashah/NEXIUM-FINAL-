@@ -1,4 +1,3 @@
-```typescript
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
 import axios from 'axios';
@@ -66,4 +65,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to process resume' }, { status: 500 });
   }
 }
-```
+
