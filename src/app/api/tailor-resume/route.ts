@@ -5,8 +5,13 @@ const uri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
 
 async function connectToMongo() {
-  if (cachedClient && cachedClient.db().command({ ping: 1 })) {
-    return cachedClient;
+  if (cachedClient) {
+    try {
+      await cachedClient.db().command({ ping: 1 });
+      return cachedClient;
+    } catch {
+      cachedClient = null; // Reset cached client if ping fails
+    }
   }
 
   const client = new MongoClient(uri);
@@ -21,7 +26,7 @@ export async function POST(request: Request) {
     const db = client.db('resume_tailor');
     const { userId, resumeData } = await request.json();
 
-    // Example: Save resume data to MongoDB
+    // Save resume data to MongoDB
     await db.collection('resumes').insertOne({
       userId,
       resumeData,
