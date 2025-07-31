@@ -71,7 +71,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50 z-0" />
 
         {/* Main content */}
-        <div className="relative z-10 w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 mt-240">
+        <div className="relative z-10 w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 mt-2400">
 
 
 
