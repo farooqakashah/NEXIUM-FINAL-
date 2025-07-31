@@ -11,6 +11,9 @@ export default {
         'lg': 'var(--radius)',
         'xl': 'calc(var(--radius) + 4px)',
       },
+      outline: {
+        'ring/50': '2px solid var(--ring) / 0.5',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],
