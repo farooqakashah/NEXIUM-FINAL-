@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 const uri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -73,21 +73,24 @@ export async function POST(request: Request) {
       console.log('Updated resume in MongoDB:', insertResult.insertedId);
 
       return NextResponse.json({ message: 'Resume tailored successfully', tailoredResume, tailoredResumeUrl }, { status: 200 });
-    } catch (n8nError: AxiosError) {
+    } catch (n8nError) {
       console.error('n8n webhook error:', {
-        message: n8nError.message,
-        code: n8nError.code,
-        response: n8nError.response ? { status: n8nError.response.status, data: n8nError.response.data } : null,
+        message: n8nError instanceof Error ? n8nError.message : 'Unknown error',
+        code: (n8nError as any).code,
+        response: (n8nError as any).response ? { status: (n8nError as any).response.status, data: (n8nError as any).response.data } : null,
       });
-      throw new Error(`Failed to call n8n webhook: ${n8nError.message}`);
+      throw new Error(`Failed to call n8n webhook: ${n8nError instanceof Error ? n8nError.message : 'Unknown error'}`);
     }
-  } catch (error: Error) {
+  } catch (error) {
     console.error('Error in tailor-resume API:', {
-      message: error.message,
-      stack: error.stack,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
       code: (error as any).code,
-      details: error.cause ? { message: error.cause.message, code: (error.cause as any).code } : null,
+      details: error instanceof Error && error.cause ? { message: error.cause.message, code: (error.cause as any).code } : null,
     });
-    return NextResponse.json({ error: 'Failed to process resume', details: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to process resume', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
