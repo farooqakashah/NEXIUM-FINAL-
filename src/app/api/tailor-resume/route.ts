@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
     const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : undefined;
-    const errorCause = error instanceof Error && error.cause ? { message: error.cause.message } : null;
+    const errorCause = error instanceof Error && error.cause instanceof Error ? { message: error.cause.message } : null;
     console.error('Error in tailor-resume API:', {
       message: errorMessage,
       stack: errorStack,
