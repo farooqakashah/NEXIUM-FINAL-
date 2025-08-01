@@ -1,4 +1,4 @@
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
 
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     } catch (n8nError: unknown) {
       const errorMessage = n8nError instanceof Error ? n8nError.message : 'Unknown error';
       const errorCode = n8nError instanceof AxiosError && n8nError.code ? n8nError.code : undefined;
-      const errorResponse = n8nError instanceof AxiosError && n8nError.response ? { status: n8nError.response.status, data: n8nResponse.response.data } : null;
+      const errorResponse = n8nError instanceof AxiosError && n8nError.response ? { status: n8nError.response.status, data: n8nError.response.data } : null;
       console.error('n8n webhook error:', {
         message: errorMessage,
         code: errorCode,
