@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const uri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -73,23 +73,30 @@ export async function POST(request: Request) {
       console.log('Updated resume in MongoDB:', insertResult.insertedId);
 
       return NextResponse.json({ message: 'Resume tailored successfully', tailoredResume, tailoredResumeUrl }, { status: 200 });
-    } catch (n8nError) {
+    } catch (n8nError: unknown) {
+      const errorMessage = n8nError instanceof Error ? n8nError.message : 'Unknown error';
+      const errorCode = n8nError instanceof AxiosError && n8nError.code ? n8nError.code : undefined;
+      const errorResponse = n8nError instanceof AxiosError && n8nError.response ? { status: n8nError.response.status, data: n8nError.response.data } : null;
       console.error('n8n webhook error:', {
-        message: n8nError instanceof Error ? n8nError.message : 'Unknown error',
-        code: (n8nError as any).code,
-        response: (n8nError as any).response ? { status: (n8nError as any).response.status, data: (n8nError as any).response.data } : null,
+        message: errorMessage,
+        code: errorCode,
+        response: errorResponse,
       });
-      throw new Error(`Failed to call n8n webhook: ${n8nError instanceof Error ? n8nError.message : 'Unknown error'}`);
+      throw new Error(`Failed to call n8n webhook: ${errorMessage}`);
     }
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : undefined;
+    const errorCause = error instanceof Error && error.cause ? { message: error.cause.message } : null;
     console.error('Error in tailor-resume API:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      code: (error as any).code,
-      details: error instanceof Error && error.cause ? { message: error.cause.message, code: (error.cause as any).code } : null,
+      message: errorMessage,
+      stack: errorStack,
+      code: errorCode,
+      details: errorCause,
     });
     return NextResponse.json(
-      { error: 'Failed to process resume', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to process resume', details: errorMessage },
       { status: 500 }
     );
   }
