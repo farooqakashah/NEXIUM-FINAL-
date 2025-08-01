@@ -59,9 +59,10 @@ export default function Home() {
         <title>Resume Tailor - Home</title>
         <meta name="description" content="Tailor your resume with AI" />
       </Head>
-      <Navbar/>
+      <Navbar />
+
       <div
-        className="relative min-h-screen bg-cover bg-center flex items-center justify-center p-4"
+        className="relative min-h-screen bg-cover bg-center flex items-center justify-center p-4 pt-28"
         style={{
           backgroundImage:
             "url('https://static.vecteezy.com/system/resources/previews/026/481/532/large_2x/serenity-and-peace-with-this-breathtaking-4k-wallpaper-depicting-a-tranquil-natural-landscape-free-photo.jpg')",
@@ -71,17 +72,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50 z-0" />
 
         {/* Main content */}
-        <div className="relative z-10 w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 mt-2400">
-
-
-
+        <div className="relative z-10 w-full max-w-3xl bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 mt-0">
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold text-black mb-2">Paste Your Resume</h2>
               <textarea
                 value={resumeInput}
                 onChange={(e) => setResumeInput(e.target.value)}
-                placeholder="Paste your resume here in form of a pragraph..."
+                placeholder="Paste your resume here in form of a paragraph..."
                 className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 rows={5}
                 disabled={loading}
@@ -143,7 +141,9 @@ export default function Home() {
               </button>
             </div>
 
-            {message && <p className="mt-2 text-center text-sm text-red-600">{message}</p>}
+            {message && (
+              <p className="mt-2 text-center text-sm text-red-600">{message}</p>
+            )}
           </div>
         </div>
       </div>
