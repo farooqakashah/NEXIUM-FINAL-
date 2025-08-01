@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       tailoredResume: null,
       tailoredResumeUrl: null,
     });
-    console.log('Inserted resume with ID:', insertResult.insertedId);
+    console.log('Inserted resume with ID:', insertResult.insertedId.toString());
 
     const resumeId = insertResult.insertedId.toString();
 
@@ -61,43 +61,38 @@ export async function POST(request: Request) {
       }
 
       // Extract tailored resume data
-      const tailoredResume = n8nResponse.data.tailoredResume || 'Tailored resume content';
-      const tailoredResumeUrl = n8nResponse.data.tailoredResumeUrl || 'https://example.com/tailored-resume.pdf';
-      console.log('Received n8n data:', { tailoredResume, tailoredResumeUrl });
+      let tailoredResume: string;
+      let tailoredResumeUrl: string | null = null;
+      if (Array.isArray(n8nResponse.data) && n8nResponse.data[0]?.content) {
+        tailoredResume = n8nResponse.data[0].content;
+        tailoredResumeUrl = n8nResponse.data[0].tailoredResumeUrl || 'https://example.com/tailored-resume.pdf';
+      } else if (n8nResponse.data.tailoredResume) {
+        tailoredResume = n8nResponse.data.tailoredResume;
+        tailoredResumeUrl = n8nResponse.data.tailoredResumeUrl || 'https://example.com/tailored-resume.pdf';
+      } else {
+        console.warn('Unexpected n8n response format, using fallback');
+        tailoredResume = 'Tailored resume content';
+        tailoredResumeUrl = 'https://example.com/tailored-resume.pdf';
+      }
+      console.log('Extracted n8n data:', { tailoredResume, tailoredResumeUrl });
+
+      // Debug: Check document before update
+      const documentBeforeUpdate = await db.collection('resumes').findOne({ _id: insertResult.insertedId });
+      console.log('Document before update:', documentBeforeUpdate);
 
       // Update MongoDB with tailored resume
-      await db.collection('resumes').updateOne(
-        { _id: insertResult.insertedId, userId },
+      const updateResult = await db.collection('resumes').updateOne(
+        { _id: insertResult.insertedId },
         { $set: { tailoredResume, tailoredResumeUrl, updatedAt: new Date() } }
       );
-      console.log('Updated resume in MongoDB:', insertResult.insertedId);
-
-      return NextResponse.json({ message: 'Resume tailored successfully', tailoredResume, tailoredResumeUrl }, { status: 200 });
-    } catch (n8nError: unknown) {
-      const errorMessage = n8nError instanceof Error ? n8nError.message : 'Unknown error';
-      const errorCode = n8nError instanceof AxiosError && n8nError.code ? n8nError.code : undefined;
-      const errorResponse = n8nError instanceof AxiosError && n8nError.response ? { status: n8nError.response.status, data: n8nError.response.data } : null;
-      console.error('n8n webhook error:', {
-        message: errorMessage,
-        code: errorCode,
-        response: errorResponse,
+      console.log('MongoDB update result:', {
+        matchedCount: updateResult.matchedCount,
+        modifiedCount: updateResult.modifiedCount,
+        resumeId: insertResult.insertedId.toString(),
+        userId,
       });
-      throw new Error(`Failed to call n8n webhook: ${errorMessage}`);
-    }
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : undefined;
-    const errorCause = error instanceof Error && error.cause instanceof Error ? { message: error.cause.message } : null;
-    console.error('Error in tailor-resume API:', {
-      message: errorMessage,
-      stack: errorStack,
-      code: errorCode,
-      details: errorCause,
-    });
-    return NextResponse.json(
-      { error: 'Failed to process resume', details: errorMessage },
-      { status: 500 }
-    );
-  }
-}
+
+      if (updateResult.matchedCount === 0) {
+        console.error('No document matched for update:', { _id: insertResult.insertedId.toString(), userId });
+        throw new Error('Failed to update resume in MongoDB');
+      }
