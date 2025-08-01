@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const uri = process.env.MONGODB_URI!;
 let cachedClient: MongoClient | null = null;
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       console.log('Updated resume in MongoDB:', insertResult.insertedId);
 
       return NextResponse.json({ message: 'Resume tailored successfully', tailoredResume, tailoredResumeUrl }, { status: 200 });
-    } catch (n8nError: any) {
+    } catch (n8nError: AxiosError) {
       console.error('n8n webhook error:', {
         message: n8nError.message,
         code: n8nError.code,
@@ -81,12 +81,12 @@ export async function POST(request: Request) {
       });
       throw new Error(`Failed to call n8n webhook: ${n8nError.message}`);
     }
-  } catch (error: any) {
+  } catch (error: Error) {
     console.error('Error in tailor-resume API:', {
       message: error.message,
       stack: error.stack,
-      code: error.code,
-      details: error.cause ? { message: error.cause.message, code: error.cause.code } : null,
+      code: (error as any).code,
+      details: error.cause ? { message: error.cause.message, code: (error.cause as any).code } : null,
     });
     return NextResponse.json({ error: 'Failed to process resume', details: error.message }, { status: 500 });
   }
