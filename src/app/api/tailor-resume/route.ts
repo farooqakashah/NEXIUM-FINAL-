@@ -96,3 +96,37 @@ export async function POST(request: Request) {
         console.error('No document matched for update:', { _id: insertResult.insertedId.toString(), userId });
         throw new Error('Failed to update resume in MongoDB');
       }
+
+      // Debug: Check document after update
+      const documentAfterUpdate = await db.collection('resumes').findOne({ _id: insertResult.insertedId });
+      console.log('Document after update:', documentAfterUpdate);
+
+      return NextResponse.json({ message: 'Resume tailored successfully', tailoredResume, tailoredResumeUrl }, { status: 200 });
+    } catch (n8nError: unknown) {
+      const errorMessage = n8nError instanceof Error ? n8nError.message : 'Unknown error';
+      const errorCode = n8nError instanceof AxiosError && n8nError.code ? n8nError.code : undefined;
+      const errorResponse = n8nError instanceof AxiosError && n8nError.response ? { status: n8nError.response.status, data: n8nResponse.response.data } : null;
+      console.error('n8n webhook error:', {
+        message: errorMessage,
+        code: errorCode,
+        response: errorResponse,
+      });
+      throw new Error(`Failed to call n8n webhook: ${errorMessage}`);
+    }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : undefined;
+    const errorCause = error instanceof Error && error.cause instanceof Error ? { message: error.cause.message } : null;
+    console.error('Error in tailor-resume API:', {
+      message: errorMessage,
+      stack: errorStack,
+      code: errorCode,
+      details: errorCause,
+    });
+    return NextResponse.json(
+      { error: 'Failed to process resume', details: errorMessage },
+      { status: 500 }
+    );
+  }
+}
